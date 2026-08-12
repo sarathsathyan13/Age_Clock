@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<title>AGE Clock</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Track age, life totals, birthdays, and custom milestones in one live dashboard.">
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#09090b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #09090b;
+  --surface: #141414;
+  --surface-2: #1a1816;
+  --text: #f4f4f5;
+  --muted: #a1a1aa;
+  --soft: #71717a;
+  --line: #2a2a2e;
+  --accent: #ef4444;
+  --accent-2: #06b6d4;
+  --accent-3: #f59e0b;
+  --good: #22c55e;
+  --danger: #fb7185;
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  --radius: 8px;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --text: #111827;
+  --muted: #475569;
+  --soft: #64748b;
+  --line: #dbe3ee;
+  --accent: #dc2626;
+  --accent-2: #0284c7;
+  --accent-3: #b45309;
+  --good: #16a34a;
+  --danger: #e11d48;
+  --shadow: 0 22px 50px rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="neon"] {
+  --bg: #050509;
+  --surface: #101116;
+  --surface-2: #16131f;
+  --text: #e5f9ff;
+  --muted: #9ad7df;
+  --soft: #6aa5ac;
+  --line: #26343b;
+  --accent: #22d3ee;
+  --accent-2: #fb7185;
+  --accent-3: #a3e635;
+  --good: #34d399;
+  --danger: #f43f5e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background:
+    linear-gradient(135deg, rgba(239, 68, 68, 0.08), transparent 32%),
+    linear-gradient(315deg, rgba(6, 182, 212, 0.08), transparent 36%),
+    var(--bg);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 20px;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button,
+select,
+input {
+  border-radius: var(--radius);
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
+.app {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.topbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: stretch;
+  margin-bottom: 18px;
+}
+
+.profile-strip,
+.quick-panel,
+.panel,
+.metric,
+.milestone-card {
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.profile-strip {
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  padding: 18px;
+  border-radius: var(--radius);
+}
+
+.brand {
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0 0 5px;
+  color: var(--accent-3);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 7px;
+  font-size: 30px;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.profile-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.quick-panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(104px, 1fr));
+  gap: 1px;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.quick-item {
+  min-width: 0;
+  background: var(--surface);
+  padding: 14px;
+}
+
+.quick-label {
+  display: block;
+  color: var(--soft);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.quick-value {
+  display: block;
+  margin-top: 5px;
+  font-size: 15px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.nav-button,
+.ghost-button,
+.primary-button,
+.danger-button,
+.icon-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.nav-button {
+  background: var(--surface);
+  font-weight: 800;
+}
+
+.nav-button[aria-current="page"] {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 24%, var(--surface)), color-mix(in srgb, var(--accent-2) 20%, var(--surface)));
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+}
+
+.ghost-button {
+  background: transparent;
+  padding: 0 14px;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-color: transparent;
+  color: #ffffff;
+  padding: 0 16px;
+  font-weight: 900;
+}
+
+.danger-button {
+  background: color-mix(in srgb, var(--danger) 13%, var(--surface));
+  color: var(--danger);
+  padding: 0 14px;
+}
+
+.icon-button {
+  flex: 0 0 auto;
+  width: 42px;
+  padding: 0;
+  background: var(--surface-2);
+}
+
+button:hover {
+  border-color: var(--accent-2);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.view {
+  display: none;
+}
+
+.view.is-active {
+  display: block;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.8fr);
+  gap: 18px;
+}
+
+.panel {
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.panel-header h2 {
+  margin-bottom: 4px;
+  font-size: 20px;
+}
+
+.panel-header p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(76px, 1fr));
+  gap: 8px;
+}
+
+.time-tile {
+  min-width: 0;
+  min-height: 104px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.time-number {
+  display: block;
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.time-label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.insight-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.dial-wrap {
+  display: grid;
+  place-items: center;
+  gap: 12px;
+}
+
+.dial {
+  --value: 0%;
+  width: 172px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent) var(--value), var(--line) 0);
+  position: relative;
+}
+
+.dial::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.dial strong,
+.dial span {
+  position: relative;
+  z-index: 1;
+}
+
+.dial strong {
+  font-size: 30px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dial span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.progress-list {
+  display: grid;
+  gap: 12px;
+}
+
+.progress-row {
+  display: grid;
+  gap: 7px;
+}
+
+.progress-row span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bar {
+  height: 9px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.bar-fill {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
+  transition: width 0.25s ease;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.metric {
+  min-width: 0;
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 14px;
+  border-radius: var(--radius);
+}
+
+.metric span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.metric strong {
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: 23px;
+  overflow-wrap: anywhere;
+}
+
+.milestone-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+  gap: 18px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+.field label,
+.check-field span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 0 12px;
+}
+
+.check-field {
+  min-height: 46px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 0 12px;
+}
+
+.check-field input {
+  width: 18px;
+  height: 18px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.form-actions button {
+  flex: 1 1 130px;
+}
+
+.milestone-topline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.milestone-topline h2 {
+  margin-bottom: 0;
+}
+
+.milestone-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.milestone-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.summary-pill {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.summary-pill span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.summary-pill strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.milestone-list {
+  display: grid;
+  gap: 10px;
+}
+
+.milestone-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px;
+  border-radius: var(--radius);
+}
+
+.milestone-name {
+  margin-bottom: 7px;
+  font-size: 16px;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.milestone-meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.milestone-side {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+  text-align: right;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.status.done {
+  color: var(--good);
+  background: color-mix(in srgb, var(--good) 14%, transparent);
+}
+
+.status.upcoming {
+  color: var(--accent-2);
+  background: color-mix(in srgb, var(--accent-2) 14%, transparent);
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.row-actions button {
+  min-height: 34px;
+}
+
+.empty-state {
+  min-height: 160px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  text-align: center;
+  padding: 18px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.settings-grid .wide {
+  grid-column: 1 / -1;
+}
+
+.status-message {
+  min-height: 22px;
+  margin: 14px 0 0;
+  color: var(--accent-3);
+  font-size: 13px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .topbar,
+  .dashboard-grid,
+  .milestone-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-panel,
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .time-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  body {
+    padding: 12px;
+  }
+
+  .profile-strip,
+  .panel {
+    padding: 14px;
+  }
+
+  .profile-strip,
+  .milestone-topline,
+  .milestone-card {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-strip {
+    display: grid;
+  }
+
+  .time-grid,
+  .quick-panel,
+  .stats-grid,
+  .milestone-summary,
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .time-tile {
+    min-height: 82px;
+  }
+
+  .time-number {
+    font-size: 24px;
+  }
+
+  .milestone-side {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .row-actions {
+    justify-content: flex-start;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+  <header class="topbar">
+    <section class="profile-strip" aria-labelledby="appTitle">
+      <div class="brand">
+        <p class="eyebrow">Life Stopwatch</p>
+        <h1 id="appTitle">AGE Clock</h1>
+        <div class="profile-meta">
+          <span>DOB <time id="birthDisplay"></time></span>
+          <span id="ageModeLabel">Exact calendar</span>
+        </div>
+      </div>
+      <button class="icon-button" type="button" id="editProfileButton" title="Edit profile" aria-label="Edit profile">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+      </button>
+    </section>
+
+    <aside class="quick-panel" aria-label="Quick life facts">
+      <div class="quick-item">
+        <span class="quick-label">Next birthday</span>
+        <strong class="quick-value" id="nextBirthdayQuick">--</strong>
+      </div>
+      <div class="quick-item">
+        <span class="quick-label">Life progress</span>
+        <strong class="quick-value" id="lifeProgressQuick">--</strong>
+      </div>
+      <div class="quick-item">
+        <span class="quick-label">Next milestone</span>
+        <strong class="quick-value" id="nextMilestoneQuick">--</strong>
+      </div>
+    </aside>
+  </header>
+
+  <nav class="nav" aria-label="Main views">
+    <button class="nav-button" type="button" data-route="clock" aria-current="page">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+      <span>Clock</span>
+    </button>
+    <button class="nav-button" type="button" data-route="milestones">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20"></path><path d="m5 7 7-5 7 5"></path><path d="m5 17 7 5 7-5"></path></svg>
+      <span>Milestones</span>
+    </button>
+    <button class="nav-button" type="button" data-route="settings">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.8 1.8 0 0 0 .4 2l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.8 1.8 0 0 0-2-.4 1.8 1.8 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.1a1.8 1.8 0 0 0-1-1.6 1.8 1.8 0 0 0-2 .4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.8 1.8 0 0 0 .4-2 1.8 1.8 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.1a1.8 1.8 0 0 0 1.6-1 1.8 1.8 0 0 0-.4-2l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.8 1.8 0 0 0 2 .4 1.8 1.8 0 0 0 1-1.6V3a2 2 0 1 1 4 0v.1a1.8 1.8 0 0 0 1 1.6 1.8 1.8 0 0 0 2-.4l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.8 1.8 0 0 0-.4 2 1.8 1.8 0 0 0 1.6 1H21a2 2 0 1 1 0 4h-.1a1.8 1.8 0 0 0-1.5 1Z"></path></svg>
+      <span>Settings</span>
+    </button>
+  </nav>
+
+  <main>
+    <section class="view is-active" id="clockView" aria-labelledby="clockHeading">
+      <div class="dashboard-grid">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2 id="clockHeading">Live Age</h2>
+              <p id="clockSubtitle">Years, months, days, hours, minutes, seconds, and milliseconds.</p>
+            </div>
+          </div>
+
+          <div class="time-grid" aria-live="off">
+            <div class="time-tile"><strong class="time-number" id="ageYears">00</strong><span class="time-label">Years</span></div>
+            <div class="time-tile"><strong class="time-number" id="ageMonths">00</strong><span class="time-label">Months</span></div>
+            <div class="time-tile"><strong class="time-number" id="ageDays">00</strong><span class="time-label">Days</span></div>
+            <div class="time-tile"><strong class="time-number" id="ageHours">00</strong><span class="time-label">Hours</span></div>
+            <div class="time-tile"><strong class="time-number" id="ageMinutes">00</strong><span class="time-label">Minutes</span></div>
+            <div class="time-tile"><strong class="time-number" id="ageSeconds">00</strong><span class="time-label">Seconds</span></div>
+            <div class="time-tile"><strong class="time-number" id="ageMillis">000</strong><span class="time-label">Millis</span></div>
+          </div>
+        </section>
+
+        <aside class="panel insight-stack" aria-label="Life progress">
+          <div class="dial-wrap">
+            <div class="dial" id="lifeDial">
+              <div>
+                <strong id="lifePercent">0%</strong>
+                <span>of target</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="progress-list">
+            <div class="progress-row">
+              <span><b>Birthday year</b><b id="birthdayPercentLabel">0%</b></span>
+              <div class="bar"><div class="bar-fill" id="birthdayBar"></div></div>
+            </div>
+            <div class="progress-row">
+              <span><b>Expected lifespan</b><b id="lifePercentLabel">0%</b></span>
+              <div class="bar"><div class="bar-fill" id="lifeBar"></div></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <section class="stats-grid" aria-label="Total life statistics">
+        <article class="metric"><span>Total months</span><strong id="totalMonths">--</strong></article>
+        <article class="metric"><span>Total weeks</span><strong id="totalWeeks">--</strong></article>
+        <article class="metric"><span>Total days</span><strong id="totalDays">--</strong></article>
+        <article class="metric"><span>Total hours</span><strong id="totalHours">--</strong></article>
+        <article class="metric"><span>Total minutes</span><strong id="totalMinutes">--</strong></article>
+        <article class="metric"><span>Total seconds</span><strong id="totalSeconds">--</strong></article>
+        <article class="metric"><span>Heartbeats</span><strong id="heartbeats">--</strong></article>
+        <article class="metric"><span>Birth weekday</span><strong id="birthWeekday">--</strong></article>
+      </section>
+    </section>
+
+    <section class="view" id="milestonesView" aria-labelledby="milestonesHeading">
+      <div class="milestone-layout">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2 id="milestonesHeading">Milestones</h2>
+              <p>Custom targets stay through refresh in this tab.</p>
+            </div>
+          </div>
+
+          <form class="form-grid" id="milestoneForm">
+            <div class="field">
+              <label for="milestoneValue">Value</label>
+              <input id="milestoneValue" type="number" min="1" step="1" inputmode="numeric" placeholder="10000" required>
+            </div>
+            <div class="field">
+              <label for="milestoneUnit">Unit</label>
+              <select id="milestoneUnit">
+                <option value="seconds">Seconds</option>
+                <option value="minutes">Minutes</option>
+                <option value="hours">Hours</option>
+                <option value="days">Days</option>
+                <option value="weeks">Weeks</option>
+                <option value="months">Months</option>
+                <option value="years">Years</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="milestoneLabel">Label</label>
+              <input id="milestoneLabel" type="text" maxlength="48" placeholder="Optional">
+            </div>
+            <div class="form-actions">
+              <button class="primary-button" type="submit" id="saveMilestoneButton">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+                <span>Add</span>
+              </button>
+              <button class="ghost-button hidden" type="button" id="cancelMilestoneEdit">Cancel</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="milestone-topline">
+            <h2>Timeline</h2>
+            <div class="milestone-tools">
+              <button class="ghost-button" type="button" id="resetMilestones">Reset defaults</button>
+              <button class="danger-button" type="button" id="deleteAllMilestones">Delete all</button>
+            </div>
+          </div>
+
+          <div class="milestone-summary" aria-label="Milestone summary">
+            <div class="summary-pill"><span>Upcoming</span><strong id="upcomingCount">0</strong></div>
+            <div class="summary-pill"><span>Completed</span><strong id="completedCount">0</strong></div>
+            <div class="summary-pill"><span>Closest</span><strong id="closestMilestone">--</strong></div>
+          </div>
+
+          <div class="milestone-list" id="milestoneList"></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="view" id="settingsView" aria-labelledby="settingsHeading">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 id="settingsHeading">Settings</h2>
+            <p>Profile values are saved in this browser.</p>
+          </div>
+        </div>
+
+        <form class="settings-grid" id="profileForm">
+          <div class="field wide">
+            <label for="profileNameInput">Name</label>
+            <input id="profileNameInput" type="text" maxlength="60" required>
+          </div>
+          <div class="field">
+            <label for="birthDateInput">Birth date</label>
+            <input id="birthDateInput" type="date" required>
+          </div>
+          <div class="field">
+            <label for="birthTimeInput">Birth time</label>
+            <input id="birthTimeInput" type="time" step="60" required>
+          </div>
+          <div class="field">
+            <label for="themeInput">Theme</label>
+            <select id="themeInput">
+              <option value="dark">Dark</option>
+              <option value="neon">Neon</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="lifeExpectancyInput">Life target years</label>
+            <input id="lifeExpectancyInput" type="number" min="1" max="150" step="1" required>
+          </div>
+          <div class="field">
+            <label for="heartbeatInput">Heartbeat BPM</label>
+            <input id="heartbeatInput" type="number" min="30" max="220" step="1" required>
+          </div>
+          <label class="check-field">
+            <span>Exact calendar</span>
+            <input id="exactInput" type="checkbox">
+          </label>
+          <label class="check-field">
+            <span>Share profile</span>
+            <input id="shareProfileInput" type="checkbox">
+          </label>
+          <div class="form-actions wide">
+            <button class="primary-button" type="submit">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path><path d="M17 21v-8H7v8"></path><path d="M7 3v5h8"></path></svg>
+              <span>Save profile</span>
+            </button>
+          </div>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <p class="status-message" id="statusMessage" role="status" aria-live="polite"></p>
+</div>
+
+<script>
+'use strict';
+
+const CONFIG = {
+  DEFAULT_BIRTH: '2000-11-13T07:09:00',
+  DEFAULT_NAME: 'SARATH P S - AGE Clock',
+  PROFILE_KEY: 'ageClockProfile',
+  LEGACY_BIRTH_KEY: 'birth',
+  LEGACY_NAME_KEY: 'name',
+  MILESTONES_KEY: 'lifeMilestones',
+  SHARE_PROFILE_KEY: 'shareProfileUpdates',
+  DATA_ENDPOINT: '',
+  AVG_DAYS_PER_YEAR: 365.2422,
+  AVG_DAYS_PER_MONTH: 30.44,
+  DEFAULT_LIFE_EXPECTANCY: 80,
+  DEFAULT_HEARTBEAT_BPM: 72
+};
+
+const MS = {
+  SECOND: 1000,
+  MINUTE: 60 * 1000,
+  HOUR: 60 * 60 * 1000,
+  DAY: 24 * 60 * 60 * 1000
+};
+
+const UNITS = {
+  seconds: 'Seconds',
+  minutes: 'Minutes',
+  hours: 'Hours',
+  days: 'Days',
+  weeks: 'Weeks',
+  months: 'Months',
+  years: 'Years'
+};
+
+const DEFAULT_MILESTONES = [
+  { id: 1, label: '1,000th Week', unit: 'weeks', value: 1000 },
+  { id: 2, label: '10,000th Day', unit: 'days', value: 10000 },
+  { id: 3, label: '250,000th Hour', unit: 'hours', value: 250000 },
+  { id: 4, label: '1 Billion Seconds', unit: 'seconds', value: 1000000000 }
+];
+
+const numberFormatter = new Intl.NumberFormat(undefined);
+const compactFormatter = new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 });
+const dateFormatter = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'short',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit'
+});
+const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'long' });
+
+const elements = {};
+[
+  'appTitle', 'birthDisplay', 'ageModeLabel', 'nextBirthdayQuick', 'lifeProgressQuick',
+  'nextMilestoneQuick', 'ageYears', 'ageMonths', 'ageDays', 'ageHours', 'ageMinutes',
+  'ageSeconds', 'ageMillis', 'lifeDial', 'lifePercent', 'birthdayPercentLabel',
+  'lifePercentLabel', 'birthdayBar', 'lifeBar', 'totalMonths', 'totalWeeks',
+  'totalDays', 'totalHours', 'totalMinutes', 'totalSeconds', 'heartbeats',
+  'birthWeekday', 'milestoneForm', 'milestoneValue', 'milestoneUnit', 'milestoneLabel',
+  'saveMilestoneButton', 'cancelMilestoneEdit', 'resetMilestones', 'deleteAllMilestones',
+  'upcomingCount', 'completedCount', 'closestMilestone', 'milestoneList', 'profileForm',
+  'profileNameInput', 'birthDateInput', 'birthTimeInput', 'themeInput',
+  'lifeExpectancyInput', 'heartbeatInput', 'exactInput', 'shareProfileInput',
+  'editProfileButton', 'statusMessage'
+].forEach(id => {
+  const element = document.getElementById(id);
+  if (!element) throw new Error(`Missing element: ${id}`);
+  elements[id] = element;
+});
+
+const state = {
+  profile: loadProfile(),
+  milestones: loadMilestones(),
+  editingMilestoneId: null,
+  animationFrameId: null
+};
+
+function isValidDate(date) {
+  return date instanceof Date && !Number.isNaN(date.getTime());
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function safeJsonParse(value) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+function loadProfile() {
+  const profile = {
+    name: CONFIG.DEFAULT_NAME,
+    birthIso: new Date(CONFIG.DEFAULT_BIRTH).toISOString(),
+    theme: 'dark',
+    exactCalendar: true,
+    lifeExpectancy: CONFIG.DEFAULT_LIFE_EXPECTANCY,
+    heartbeatBpm: CONFIG.DEFAULT_HEARTBEAT_BPM,
+    shareProfile: false
+  };
+
+  try {
+    const stored = safeJsonParse(localStorage.getItem(CONFIG.PROFILE_KEY));
+    if (stored && typeof stored === 'object') Object.assign(profile, stored);
+
+    const legacyName = localStorage.getItem(CONFIG.LEGACY_NAME_KEY);
+    if (legacyName) profile.name = legacyName;
+
+    const legacyBirth = localStorage.getItem(CONFIG.LEGACY_BIRTH_KEY);
+    if (legacyBirth && isValidDate(new Date(legacyBirth))) profile.birthIso = new Date(legacyBirth).toISOString();
+
+    profile.shareProfile =
+      localStorage.getItem(CONFIG.SHARE_PROFILE_KEY) === 'true' &&
+      Boolean(CONFIG.DATA_ENDPOINT);
+  } catch {}
+
+  return sanitizeProfile(profile);
+}
+
+function sanitizeProfile(profile) {
+  const birth = new Date(profile.birthIso);
+  const safeBirth = isValidDate(birth) ? birth : new Date(CONFIG.DEFAULT_BIRTH);
+  const name = String(profile.name || CONFIG.DEFAULT_NAME).trim() || CONFIG.DEFAULT_NAME;
+  const theme = ['dark', 'neon', 'light'].includes(profile.theme) ? profile.theme : 'dark';
+
+  return {
+    name,
+    birthIso: safeBirth.toISOString(),
+    theme,
+    exactCalendar: Boolean(profile.exactCalendar),
+    lifeExpectancy: clamp(Number(profile.lifeExpectancy) || CONFIG.DEFAULT_LIFE_EXPECTANCY, 1, 150),
+    heartbeatBpm: clamp(Number(profile.heartbeatBpm) || CONFIG.DEFAULT_HEARTBEAT_BPM, 30, 220),
+    shareProfile: Boolean(profile.shareProfile) && Boolean(CONFIG.DATA_ENDPOINT)
+  };
+}
+
+function saveProfile() {
+  state.profile = sanitizeProfile(state.profile);
+
+  try {
+    localStorage.setItem(CONFIG.PROFILE_KEY, JSON.stringify(state.profile));
+    localStorage.setItem(CONFIG.LEGACY_NAME_KEY, state.profile.name);
+    localStorage.setItem(CONFIG.LEGACY_BIRTH_KEY, state.profile.birthIso);
+    localStorage.setItem(CONFIG.SHARE_PROFILE_KEY, String(state.profile.shareProfile));
+  } catch (error) {
+    showStatus(`Could not save profile: ${error.message}`, true);
+  }
+}
+
+function loadMilestones() {
+  try {
+    const stored = safeJsonParse(sessionStorage.getItem(CONFIG.MILESTONES_KEY));
+    if (Array.isArray(stored)) {
+      const normalized = stored.map(normalizeMilestone).filter(Boolean);
+      if (normalized.length) return normalized;
+    }
+  } catch {}
+
+  return DEFAULT_MILESTONES.map(milestone => ({ ...milestone }));
+}
+
+function normalizeMilestone(milestone) {
+  if (!milestone || typeof milestone !== 'object') return null;
+
+  const value = Number(milestone.value);
+  const unit = String(milestone.unit || '');
+  if (!Number.isFinite(value) || value <= 0 || !UNITS[unit]) return null;
+
+  return {
+    id: Number(milestone.id) || Date.now(),
+    label: String(milestone.label || makeMilestoneLabel(value, unit)).trim().slice(0, 48),
+    unit,
+    value: Math.round(value)
+  };
+}
+
+function saveMilestones() {
+  try {
+    sessionStorage.setItem(CONFIG.MILESTONES_KEY, JSON.stringify(state.milestones));
+  } catch (error) {
+    showStatus(`Could not save milestones: ${error.message}`, true);
+  }
+}
+
+function makeMilestoneLabel(value, unit) {
+  return `${numberFormatter.format(value)} ${UNITS[unit]}`;
+}
+
+function getBirthDate() {
+  return new Date(state.profile.birthIso);
+}
+
+function pad(value, digits = 2) {
+  return String(Math.floor(Math.abs(value))).padStart(digits, '0');
+}
+
+function exactDiff(start, end) {
+  let years = end.getFullYear() - start.getFullYear();
+  let months = end.getMonth() - start.getMonth();
+  let days = end.getDate() - start.getDate();
+
+  if (days < 0) {
+    months -= 1;
+    days += new Date(end.getFullYear(), end.getMonth(), 0).getDate();
+  }
+
+  if (months < 0) {
+    years -= 1;
+    months += 12;
+  }
+
+  return { years, months, days };
+}
+
+function addDuration(date, value, unit) {
+  const result = new Date(date);
+
+  if (unit === 'seconds') result.setSeconds(result.getSeconds() + value);
+  if (unit === 'minutes') result.setMinutes(result.getMinutes() + value);
+  if (unit === 'hours') result.setHours(result.getHours() + value);
+  if (unit === 'days') result.setDate(result.getDate() + value);
+  if (unit === 'weeks') result.setDate(result.getDate() + value * 7);
+  if (unit === 'months') result.setMonth(result.getMonth() + value);
+  if (unit === 'years') result.setFullYear(result.getFullYear() + value);
+
+  return result;
+}
+
+function makeBirthdayForYear(birth, year) {
+  return new Date(year, birth.getMonth(), birth.getDate(), birth.getHours(), birth.getMinutes(), birth.getSeconds(), birth.getMilliseconds());
+}
+
+function getBirthdayInfo(now, birth) {
+  let next = makeBirthdayForYear(birth, now.getFullYear());
+  if (next <= now) next = makeBirthdayForYear(birth, now.getFullYear() + 1);
+
+  let previous = makeBirthdayForYear(birth, next.getFullYear() - 1);
+  if (previous > now) previous = makeBirthdayForYear(birth, now.getFullYear() - 1);
+
+  const span = next - previous;
+  const progress = span > 0 ? clamp(((now - previous) / span) * 100, 0, 100) : 0;
+  const days = Math.ceil((next - now) / MS.DAY);
+
+  return { next, previous, progress, days };
+}
+
+function formatDate(date) {
+  return dateFormatter.format(date);
+}
+
+function formatDuration(ms) {
+  const absolute = Math.abs(ms);
+  const days = Math.floor(absolute / MS.DAY);
+  const hours = Math.floor((absolute % MS.DAY) / MS.HOUR);
+  const minutes = Math.floor((absolute % MS.HOUR) / MS.MINUTE);
+  const seconds = Math.floor((absolute % MS.MINUTE) / MS.SECOND);
+
+  if (days >= 365) return `${Math.floor(days / 365)}y ${days % 365}d`;
+  if (days >= 1) return `${days}d ${hours}h`;
+  if (hours >= 1) return `${hours}h ${minutes}m`;
+  if (minutes >= 1) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
+function toDateInputValue(date) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function toTimeInputValue(date) {
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function parseLocalDateTime(dateValue, timeValue) {
+  const dateParts = String(dateValue || '').split('-').map(Number);
+  const timeParts = String(timeValue || '00:00').split(':').map(Number);
+  if (dateParts.length !== 3 || timeParts.length < 2) return null;
+
+  const [year, month, day] = dateParts;
+  const [hour, minute] = timeParts;
+  const parsed = new Date(year, month - 1, day, hour, minute, 0, 0);
+
+  if (
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== month - 1 ||
+    parsed.getDate() !== day ||
+    parsed.getHours() !== hour ||
+    parsed.getMinutes() !== minute
+  ) {
+    return null;
+  }
+
+  return parsed;
+}
+
+function showStatus(message, isError = false) {
+  elements.statusMessage.textContent = message;
+  elements.statusMessage.style.color = isError ? 'var(--danger)' : 'var(--accent-3)';
+}
+
+function clearStatusSoon() {
+  window.setTimeout(() => {
+    elements.statusMessage.textContent = '';
+  }, 2600);
+}
+
+function setText(id, value) {
+  elements[id].textContent = value;
+}
+
+function applyProfileToUi() {
+  const birth = getBirthDate();
+  document.documentElement.dataset.theme = state.profile.theme;
+  setText('appTitle', state.profile.name);
+  setText('birthDisplay', formatDate(birth));
+  setText('ageModeLabel', state.profile.exactCalendar ? 'Exact calendar' : 'Average calendar');
+
+  elements.profileNameInput.value = state.profile.name;
+  elements.birthDateInput.value = toDateInputValue(birth);
+  elements.birthTimeInput.value = toTimeInputValue(birth);
+  elements.themeInput.value = state.profile.theme;
+  elements.lifeExpectancyInput.value = String(state.profile.lifeExpectancy);
+  elements.heartbeatInput.value = String(state.profile.heartbeatBpm);
+  elements.exactInput.checked = state.profile.exactCalendar;
+  elements.shareProfileInput.checked = state.profile.shareProfile;
+}
+
+function getClockStats(now) {
+  const birth = getBirthDate();
+  const totalMs = Math.max(0, now - birth);
+  const totalSeconds = Math.floor(totalMs / MS.SECOND);
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const totalHours = Math.floor(totalMinutes / 60);
+  const totalDays = Math.floor(totalHours / 24);
+  const calendarAge = exactDiff(birth, now);
+
+  let years = calendarAge.years;
+  let months = calendarAge.months;
+  let days = calendarAge.days;
+
+  if (!state.profile.exactCalendar) {
+    years = Math.floor(totalDays / CONFIG.AVG_DAYS_PER_YEAR);
+    const remainder = totalDays - years * CONFIG.AVG_DAYS_PER_YEAR;
+    months = Math.floor(remainder / CONFIG.AVG_DAYS_PER_MONTH);
+    days = Math.floor(remainder - months * CONFIG.AVG_DAYS_PER_MONTH);
+  }
+
+  return {
+    birth,
+    totalMs,
+    totalSeconds,
+    totalMinutes,
+    totalHours,
+    totalDays,
+    totalWeeks: Math.floor(totalDays / 7),
+    totalMonths: Math.floor(totalDays / CONFIG.AVG_DAYS_PER_MONTH),
+    years,
+    months,
+    days,
+    hours: Math.floor((totalSeconds % 86400) / 3600),
+    minutes: Math.floor((totalSeconds % 3600) / 60),
+    seconds: totalSeconds % 60,
+    milliseconds: totalMs % 1000,
+    heartbeats: Math.floor(totalMinutes * state.profile.heartbeatBpm)
+  };
+}
+
+function updateClock() {
+  const now = new Date();
+  const stats = getClockStats(now);
+  const birthday = getBirthdayInfo(now, stats.birth);
+  const lifeTargetMs = state.profile.lifeExpectancy * CONFIG.AVG_DAYS_PER_YEAR * MS.DAY;
+  const lifeProgress = lifeTargetMs > 0 ? clamp((stats.totalMs / lifeTargetMs) * 100, 0, 100) : 0;
+
+  setText('ageYears', pad(stats.years));
+  setText('ageMonths', pad(stats.months));
+  setText('ageDays', pad(stats.days));
+  setText('ageHours', pad(stats.hours));
+  setText('ageMinutes', pad(stats.minutes));
+  setText('ageSeconds', pad(stats.seconds));
+  setText('ageMillis', pad(stats.milliseconds, 3));
+
+  setText('totalMonths', numberFormatter.format(stats.totalMonths));
+  setText('totalWeeks', numberFormatter.format(stats.totalWeeks));
+  setText('totalDays', numberFormatter.format(stats.totalDays));
+  setText('totalHours', numberFormatter.format(stats.totalHours));
+  setText('totalMinutes', numberFormatter.format(stats.totalMinutes));
+  setText('totalSeconds', numberFormatter.format(stats.totalSeconds));
+  setText('heartbeats', compactFormatter.format(stats.heartbeats));
+  setText('birthWeekday', weekdayFormatter.format(stats.birth));
+
+  setText('nextBirthdayQuick', `${birthday.days} day${birthday.days === 1 ? '' : 's'}`);
+  setText('lifeProgressQuick', `${lifeProgress.toFixed(2)}%`);
+  setText('lifePercent', `${Math.round(lifeProgress)}%`);
+  setText('birthdayPercentLabel', `${birthday.progress.toFixed(1)}%`);
+  setText('lifePercentLabel', `${lifeProgress.toFixed(1)}%`);
+
+  elements.lifeDial.style.setProperty('--value', `${lifeProgress}%`);
+  elements.birthdayBar.style.width = `${birthday.progress}%`;
+  elements.lifeBar.style.width = `${lifeProgress}%`;
+
+  updateNextMilestoneQuick(now);
+}
+
+function startClock() {
+  if (state.animationFrameId !== null) return;
+
+  const tick = () => {
+    updateClock();
+    state.animationFrameId = requestAnimationFrame(tick);
+  };
+
+  tick();
+}
+
+function stopClock() {
+  if (state.animationFrameId === null) return;
+  cancelAnimationFrame(state.animationFrameId);
+  state.animationFrameId = null;
+}
+
+function getMilestoneRows(now = new Date()) {
+  const birth = getBirthDate();
+
+  return state.milestones
+    .map(milestone => {
+      const targetDate = addDuration(birth, milestone.value, milestone.unit);
+      const done = targetDate < now;
+      const ageAt = exactDiff(birth, targetDate);
+      return { ...milestone, targetDate, done, ageAt, distance: targetDate - now };
+    })
+    .sort((a, b) => a.targetDate - b.targetDate);
+}
+
+function updateNextMilestoneQuick(now) {
+  const next = getMilestoneRows(now).find(row => !row.done);
+  setText('nextMilestoneQuick', next ? formatDuration(next.distance) : 'Complete');
+}
+
+function renderMilestones() {
+  const now = new Date();
+  const rows = getMilestoneRows(now);
+  const upcoming = rows.filter(row => !row.done);
+  const completed = rows.length - upcoming.length;
+  const closest = upcoming[0];
+
+  setText('upcomingCount', numberFormatter.format(upcoming.length));
+  setText('completedCount', numberFormatter.format(completed));
+  setText('closestMilestone', closest ? formatDuration(closest.distance) : '--');
+
+  elements.milestoneList.textContent = '';
+
+  if (!rows.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = 'No milestones in this tab.';
+    elements.milestoneList.appendChild(empty);
+    return;
+  }
+
+  rows.forEach(row => {
+    const card = document.createElement('article');
+    card.className = 'milestone-card';
+
+    const main = document.createElement('div');
+    const title = document.createElement('h3');
+    title.className = 'milestone-name';
+    title.textContent = row.label;
+
+    const meta = document.createElement('div');
+    meta.className = 'milestone-meta';
+    meta.textContent = `${numberFormatter.format(row.value)} ${UNITS[row.unit].toLowerCase()} from birth - age ${row.ageAt.years}y ${row.ageAt.months}m ${row.ageAt.days}d`;
+
+    main.append(title, meta);
+
+    const side = document.createElement('div');
+    side.className = 'milestone-side';
+
+    const date = document.createElement('strong');
+    date.textContent = formatDate(row.targetDate);
+
+    const status = document.createElement('span');
+    status.className = `status ${row.done ? 'done' : 'upcoming'}`;
+    status.textContent = row.done ? `Completed ${formatDuration(row.distance)} ago` : `Upcoming in ${formatDuration(row.distance)}`;
+
+    const actions = document.createElement('div');
+    actions.className = 'row-actions';
+
+    const editButton = document.createElement('button');
+    editButton.className = 'ghost-button';
+    editButton.type = 'button';
+    editButton.dataset.action = 'edit';
+    editButton.dataset.id = String(row.id);
+    editButton.textContent = 'Edit';
+
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'danger-button';
+    deleteButton.type = 'button';
+    deleteButton.dataset.action = 'delete';
+    deleteButton.dataset.id = String(row.id);
+    deleteButton.textContent = 'Delete';
+
+    actions.append(editButton, deleteButton);
+    side.append(date, status, actions);
+    card.append(main, side);
+    elements.milestoneList.appendChild(card);
+  });
+}
+
+function resetMilestoneForm() {
+  state.editingMilestoneId = null;
+  elements.milestoneForm.reset();
+  elements.milestoneUnit.value = 'days';
+  elements.saveMilestoneButton.querySelector('span').textContent = 'Add';
+  elements.cancelMilestoneEdit.classList.add('hidden');
+}
+
+function startMilestoneEdit(id) {
+  const milestone = state.milestones.find(item => item.id === id);
+  if (!milestone) return;
+
+  state.editingMilestoneId = id;
+  elements.milestoneValue.value = String(milestone.value);
+  elements.milestoneUnit.value = milestone.unit;
+  elements.milestoneLabel.value = milestone.label;
+  elements.saveMilestoneButton.querySelector('span').textContent = 'Save';
+  elements.cancelMilestoneEdit.classList.remove('hidden');
+  elements.milestoneValue.focus();
+}
+
+function deleteMilestone(id) {
+  const before = state.milestones.length;
+  state.milestones = state.milestones.filter(item => item.id !== id);
+  if (state.milestones.length === before) return;
+
+  saveMilestones();
+  renderMilestones();
+  showStatus('Milestone deleted.');
+  clearStatusSoon();
+}
+
+function handleMilestoneSubmit(event) {
+  event.preventDefault();
+
+  const value = Math.round(Number(elements.milestoneValue.value));
+  const unit = elements.milestoneUnit.value;
+  const label = elements.milestoneLabel.value.trim();
+
+  if (!Number.isFinite(value) || value <= 0 || !UNITS[unit]) {
+    showStatus('Enter a valid milestone value.', true);
+    return;
+  }
+
+  const milestone = {
+    id: state.editingMilestoneId || Date.now(),
+    label: label || makeMilestoneLabel(value, unit),
+    unit,
+    value
+  };
+
+  if (state.editingMilestoneId) {
+    state.milestones = state.milestones.map(item => item.id === state.editingMilestoneId ? milestone : item);
+    showStatus('Milestone updated.');
+  } else {
+    state.milestones.push(milestone);
+    showStatus('Milestone added.');
+  }
+
+  saveMilestones();
+  resetMilestoneForm();
+  renderMilestones();
+  clearStatusSoon();
+}
+
+function setRoute(route) {
+  const safeRoute = ['clock', 'milestones', 'settings'].includes(route) ? route : 'clock';
+
+  document.querySelectorAll('.view').forEach(view => view.classList.remove('is-active'));
+  document.getElementById(`${safeRoute}View`).classList.add('is-active');
+
+  document.querySelectorAll('[data-route]').forEach(button => {
+    button.setAttribute('aria-current', button.dataset.route === safeRoute ? 'page' : 'false');
+  });
+
+  if (window.location.hash !== `#${safeRoute}`) {
+    history.replaceState(null, '', `#${safeRoute}`);
+  }
+
+  if (safeRoute === 'milestones') renderMilestones();
+}
+
+function routeFromHash() {
+  return window.location.hash.replace('#', '') || 'clock';
+}
+
+async function sendProfileData(reason) {
+  if (!state.profile.shareProfile || !CONFIG.DATA_ENDPOINT) return;
+
+  const payload = {
+    type: 'profile_update',
+    reason,
+    name: state.profile.name,
+    birthDate: state.profile.birthIso,
+    submittedAt: new Date().toISOString(),
+    source: window.location.href
+  };
+
+  try {
+    const response = await fetch(CONFIG.DATA_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) throw new Error(`Status ${response.status}`);
+  } catch (error) {
+    showStatus(`Profile sharing failed: ${error.message}`, true);
+  }
+}
+
+function handleProfileSubmit(event) {
+  event.preventDefault();
+
+  const birth = parseLocalDateTime(elements.birthDateInput.value, elements.birthTimeInput.value);
+  if (!birth || birth > new Date()) {
+    showStatus('Enter a valid birth date in the past.', true);
+    return;
+  }
+
+  const name = elements.profileNameInput.value.trim();
+  if (!name) {
+    showStatus('Name cannot be empty.', true);
+    return;
+  }
+
+  const shareRequested = elements.shareProfileInput.checked;
+  if (shareRequested && !CONFIG.DATA_ENDPOINT) {
+    elements.shareProfileInput.checked = false;
+    showStatus('Sharing needs a data endpoint before it can be enabled.', true);
+  }
+
+  state.profile = sanitizeProfile({
+    name,
+    birthIso: birth.toISOString(),
+    theme: elements.themeInput.value,
+    exactCalendar: elements.exactInput.checked,
+    lifeExpectancy: Number(elements.lifeExpectancyInput.value),
+    heartbeatBpm: Number(elements.heartbeatInput.value),
+    shareProfile: elements.shareProfileInput.checked && Boolean(CONFIG.DATA_ENDPOINT)
+  });
+
+  saveProfile();
+  applyProfileToUi();
+  renderMilestones();
+  updateClock();
+  sendProfileData('profile_saved');
+  showStatus('Profile saved.');
+  clearStatusSoon();
+}
+
+document.querySelectorAll('[data-route]').forEach(button => {
+  button.addEventListener('click', () => setRoute(button.dataset.route));
+});
+
+elements.editProfileButton.addEventListener('click', () => setRoute('settings'));
+elements.profileForm.addEventListener('submit', handleProfileSubmit);
+elements.milestoneForm.addEventListener('submit', handleMilestoneSubmit);
+elements.cancelMilestoneEdit.addEventListener('click', resetMilestoneForm);
+
+elements.resetMilestones.addEventListener('click', () => {
+  state.milestones = DEFAULT_MILESTONES.map(milestone => ({ ...milestone }));
+  saveMilestones();
+  resetMilestoneForm();
+  renderMilestones();
+  showStatus('Default milestones restored.');
+  clearStatusSoon();
+});
+
+elements.deleteAllMilestones.addEventListener('click', () => {
+  if (!window.confirm('Delete all milestones in this tab?')) return;
+  state.milestones = [];
+  saveMilestones();
+  resetMilestoneForm();
+  renderMilestones();
+  showStatus('All milestones deleted.');
+  clearStatusSoon();
+});
+
+elements.milestoneList.addEventListener('click', event => {
+  const button = event.target.closest('button[data-action]');
+  if (!button) return;
+
+  const id = Number(button.dataset.id);
+  if (button.dataset.action === 'edit') startMilestoneEdit(id);
+  if (button.dataset.action === 'delete' && window.confirm('Delete this milestone?')) deleteMilestone(id);
+});
+
+window.addEventListener('hashchange', () => setRoute(routeFromHash()));
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    stopClock();
+  } else {
+    startClock();
+  }
+});
+
+if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+  navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
+
+applyProfileToUi();
+resetMilestoneForm();
+renderMilestones();
+setRoute(routeFromHash());
+startClock();
+</script>
+</body>
+</html>
