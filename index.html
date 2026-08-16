@@ -316,7 +316,11 @@ button:active {
 .time-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(76px, 1fr));
-  gap: 8px;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
 }
 
 .time-tile {
@@ -327,9 +331,13 @@ button:active {
   justify-content: center;
   gap: 8px;
   padding: 12px 8px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface-2);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.time-tile + .time-tile {
+  border-left: 1px solid var(--line);
 }
 
 .time-number {
@@ -692,7 +700,7 @@ button:active {
   }
 
   .time-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 }
 
@@ -716,7 +724,6 @@ button:active {
     display: grid;
   }
 
-  .time-grid,
   .quick-panel,
   .stats-grid,
   .milestone-summary,
@@ -724,12 +731,24 @@ button:active {
     grid-template-columns: 1fr;
   }
 
+  .time-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
   .time-tile {
-    min-height: 82px;
+    min-height: 72px;
+    gap: 6px;
+    padding: 9px 2px;
   }
 
   .time-number {
-    font-size: 24px;
+    font-size: 18px;
+  }
+
+  .time-label {
+    font-size: 8px;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
   }
 
   .milestone-side {
@@ -739,6 +758,21 @@ button:active {
 
   .row-actions {
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 380px) {
+  .time-tile {
+    min-height: 66px;
+    padding-inline: 1px;
+  }
+
+  .time-number {
+    font-size: 16px;
+  }
+
+  .time-label {
+    font-size: 7px;
   }
 }
 </style>
